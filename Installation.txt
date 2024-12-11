@@ -1,0 +1,110 @@
+Project1--> Integration of Jenkins with Terraform
+
+Pre-requestics:
+1.	A/c on AWS 
+2.	GitHub a/c required and in that create one new repository
+3.	Create an EC2 server with minimum 2cpu and memory. (ex. t2.medium)
+4.	In that server Install Jenkins , terraform and git (In linux machine by default the git is install if not install then only we have to install it).
+5.	Attache Role “EC2fullaccess” to Jenkins server
+
+
+Step1:-
+
+When server is ready install the Jenkins and terraform
+For Jenkins:-
+We required to Install the openjdk (ex. jdk11, jdk17, jdk21)
+Cmds.
+sudo apt update -y
+sudo apt upgrade -y
+sudo apt install openjdk-17-jdk -y
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install Jenkins -y 
+sudo systemctl enable Jenkins.service
+sudo systemctl start Jenkins.service
+sudo systemctl status Jenkins.service
+
+
+Note:- Jenkins by default runs on port no. 8080
+
+           Step2:-
+Install terraform on the same server where jenkins is running.
+
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform -y
+
+Step3:-
+Configure the Jenkins
+Copy the your server public ip 
+http://public_ip:8080
+for example:-
+http://44.211.44.24:8080/
+
+Go to the path while the Jenkins start it will provide you the password and copy that password and paste their .
+Create the user, fill all details which is asked, Its depends on you.
+
+Select  Install suggested plugins. It will install some default plugins. And start the jenkins
+After That we have to install some requireds plugins for that we have to go to the
+
+Manage Jenkins--- Plugins--->Available Plugins-terraform--install
+
+Wait for few seconds it will install the terraform plugins . I you have to validate it then go to the installed plugins and check for the terraform.
+
+After that we have to configure it , again we have to go to,
+
+Manage Jenkins- Tools-at last we see the terraform installation-add terraformuncheck install automatically--Name:-terraform
+Ins install directory we have to give the path like /usr/bin/-- apply and save.
+
+Create new Pipeline go to the 
+New items-- give the name of the pileline--- pieline-ok
+
+pipeline {
+    agent any
+    tools {
+     terraform 'terraform'
+ }
+
+    stages {
+        stage('git checkout') {
+            steps {
+                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/manojmbisen/project-1.git'
+            }
+        }
+         stage('terraform Initialitation') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+         stage('terraform plan') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+         stage('terraform provisioning') {
+            steps {
+                sh 'terraform apply --auto-approve'
+            }
+        }
+    }
+Now Build the pipeline and execute the pipeline
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
